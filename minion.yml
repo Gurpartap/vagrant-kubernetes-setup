@@ -67,11 +67,10 @@ coreos:
 
         [Service]
         ExecStart=/opt/bin/kubelet \
-        --address=0.0.0.0 \
-        --port=10250 \
-        --hostname_override=$public_ipv4 \
-        --etcd_servers=http://127.0.0.1:4001 \
-        --logtostderr=true
+        -address=0.0.0.0 \
+        -port=10250 \
+        -hostname_override=$public_ipv4 \
+        -etcd_servers=http://127.0.0.1:4001
         Restart=always
         RestartSec=5
 
@@ -91,7 +90,7 @@ coreos:
         Wants=docker.service
 
         [Service]
-        ExecStart=/opt/bin/proxy --etcd_servers=http://127.0.0.1:4001 --logtostderr=true
+        ExecStart=/opt/bin/proxy -etcd_servers=http://127.0.0.1:4001
         Restart=always
         RestartSec=5
 

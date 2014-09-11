@@ -4,11 +4,11 @@
 require 'fileutils'
 
 NUMBER_OF_MINIONS = 2
-BASE_IP_ADDR = "172.17.8"
 COREOS_CHANNEL = "alpha"
 COREOS_MINIMUM_VERSION = "423.0.0"
 ENABLE_SERIAL_LOGGING = false
 
+BASE_IP_ADDR = "172.17.8"
 ETCD_DISCOVERY = "#{BASE_IP_ADDR}.10"
 MASTER_IP_ADDR = "#{BASE_IP_ADDR}.100"
 MINION_IP_ADDRS = (1..NUMBER_OF_MINIONS).collect { |i| BASE_IP_ADDR + ".#{i+100}" }
@@ -35,7 +35,7 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provider :vmware_fusion do |v, override|
-    override.vm.box_url = "http://#{COREOS_CHANNEL}.release.core-os.net/amd64-usr/current/coreos_production_vagrant_vmware_fusion.json" % $update_channel
+    override.vm.box_url = "http://#{COREOS_CHANNEL}.release.core-os.net/amd64-usr/current/coreos_production_vagrant_vmware_fusion.json"
   end
 
   # Resolve issue with a specific Vagrant plugin by preventing it from updating.
@@ -71,6 +71,9 @@ Vagrant.configure("2") do |config|
       end
     end
 
+    # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
+    #config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
+
     m.vm.provision :shell, :inline => ETCD_DISCOVERY_CMD, :privileged => true
     m.vm.provision :shell, :inline => MOVE_USER_DATA_CMD, :privileged => true
     m.vm.provision :shell, :inline => "mkdir -p /opt/bin",  :privileged => true
@@ -98,6 +101,7 @@ Vagrant.configure("2") do |config|
       minion.vm.network :private_network, ip: MINION_IP_ADDRS[i-1]
 
       minion.vm.provision :file, :source => MINION_CONFIG_PATH, :destination => "/tmp/vagrantfile-user-data"
+
       provision.call(minion, %w[rudder kubelet proxy scheduler], "minion-#{i}")
     end
   end

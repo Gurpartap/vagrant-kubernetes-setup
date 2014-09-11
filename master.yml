@@ -60,11 +60,10 @@ coreos:
 
         [Service]
         ExecStart=/opt/bin/apiserver \
-        --address=127.0.0.1 \
-        --port=8080 \
-        --etcd_servers=http://127.0.0.1:4001 \
-        --machines=%MINION_IP_ADDRS% \
-        --logtostderr=true
+        -address=127.0.0.1 \
+        -port=8080 \
+        -etcd_servers=http://127.0.0.1:4001 \
+        -machines=%MINION_IP_ADDRS%
         Restart=always
         RestartSec=5
 
@@ -84,9 +83,7 @@ coreos:
         Wants=docker.service
 
         [Service]
-        ExecStart=/opt/bin/controller-manager \
-        --master=127.0.0.1:8080 \
-        --logtostderr=true
+        ExecStart=/opt/bin/controller-manager -master=127.0.0.1:8080
         Restart=always
         RestartSec=5
 
