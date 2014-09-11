@@ -4,15 +4,12 @@ Vagrant configuration for setting up a Kubernetes setup on a cluster of CoreOS V
 
 ###### Usage
 
+1. Compile kubernetes and rudder.
+2. Add the compiled binaries to `./bin`.
+
     vagrant up
-
-    # OS X
-    wget https://storage.googleapis.com/kubernetes/darwin/kubecfg
-
-    # Linux
-    wget https://storage.googleapis.com/kubernetes/kubecfg
 
     vagrant ssh-config master > ssh.config
     ssh -f -nNT -L 8080:127.0.0.1:8080 -F ssh.config master
 
-    ./kubecfg list minions
+    ./bin/kubecfg list minions
