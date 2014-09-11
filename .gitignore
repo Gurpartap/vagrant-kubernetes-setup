@@ -1,2 +1,4 @@
 .vagrant
 ssh.config
+bin/*
+*.tar.gz
