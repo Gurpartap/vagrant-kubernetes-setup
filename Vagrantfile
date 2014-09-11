@@ -18,7 +18,7 @@ DISCOVERY_CONFIG_PATH  = File.join(File.dirname(__FILE__), "discovery.yml")
 MASTER_CONFIG_PATH     = File.join(File.dirname(__FILE__), "master.yml")
 MINION_CONFIG_PATH     = File.join(File.dirname(__FILE__), "minion.yml")
 CONFIG                 = File.join(File.dirname(__FILE__), "config.rb")
-RUDDER_PATH            = File.join(File.dirname(__FILE__), "rudder")
+BIN_PATH               = File.join(File.dirname(__FILE__), "bin")
 
 require CONFIG if File.exist?(CONFIG)
 
@@ -28,12 +28,9 @@ ETCD_DISCOVERY         = "#{$base_ip_addr}.10"
 MASTER_IP_ADDR         = "#{$base_ip_addr}.100"
 MINION_IP_ADDRS        = (1..$num_minions).collect { |i| $base_ip_addr + ".#{i+100}" }
 
-puts "MASTER_IP_ADDR: #{MASTER_IP_ADDR}"
-puts "MINION_IP_ADDRS: #{MINION_IP_ADDRS}"
-
 Vagrant.configure("2") do |config|
   config.vm.box = "coreos-%s" % $update_channel
-  config.vm.box_version = ">= 308.0.1"
+  config.vm.box_version = ">= 423.0.0"
   config.vm.box_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
 
   config.vm.provider :vmware_fusion do |vb, override|
@@ -131,14 +128,21 @@ Vagrant.configure("2") do |config|
       config.vm.network :private_network, ip: private_network_ip
       config.vm.provision :file, :source => "#{cloud_config_path}", :destination => "/tmp/vagrantfile-user-data"
 
-      config.vm.provision :shell, :inline => ip_sed_command,   :privileged => true if is_master
-      config.vm.provision :shell, :inline => etcd_sed_command, :privileged => true
-      config.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/",  :privileged => true
+      commands = []
+      commands << ip_sed_command if is_master
+      commands << etcd_sed_command
+      commands << "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/"
 
-      if File.exist?(RUDDER_PATH)
-        config.vm.provision :file, :source => "#{RUDDER_PATH}", :destination => "/tmp/rudder"
-        config.vm.provision :shell, :inline => "mv /tmp/rudder /opt/bin/rudder",  :privileged => true
-      else
+      config.vm.provision :shell, :inline => commands.join(" && "), :privileged => true
+
+      config.vm.provision :shell, :inline => "mkdir -p /opt/bin",  :privileged => true
+      Dir.foreach(BIN_PATH) do |file|
+        next if file =~ /\./
+        config.vm.provision :file, :source => "#{BIN_PATH}/#{file}", :destination => "/tmp/#{file}"
+        config.vm.provision :shell, :inline => "mv /tmp/#{file} /opt/bin/#{file} && /usr/bin/chmod +x /opt/bin/#{file}",  :privileged => true
+      end
+
+      unless File.exist?("#{BIN_PATH}/rudder")
         config.vm.provision :docker do |docker|
           docker.run "gurpartap/rudder",
             args: "--rm -v /opt/bin:/opt/bin",

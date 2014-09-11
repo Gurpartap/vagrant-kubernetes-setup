@@ -30,6 +30,8 @@ coreos:
 
         [Service]
         ExecStart=/opt/bin/rudder -iface=$public_ipv4
+        Restart=always
+        RestartSec=5
 
     - name: docker.service
       command: restart
@@ -45,42 +47,23 @@ coreos:
         ExecStartPre=-/usr/bin/ip link set dev docker0 down
         ExecStartPre=-/usr/sbin/brctl delbr docker0
         ExecStart=/usr/bin/docker -d -s=btrfs -H fd:// --bip=${RUDDER_SUBNET} --mtu=${RUDDER_MTU}
-        Restart=on-failure
+        Restart=always
         RestartSec=5
 
         [Install]
         WantedBy=multi-user.target
-
-    - name: download-kubernetes.service
-      command: start
-      content: |
-        [Unit]
-        After=network-online.target
-        Before=kubelet.service
-        Before=proxy.service
-        Description=Download Kubernetes Binaries
-        Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=network-online.target
-
-        [Service]
-        ExecStart=/usr/bin/wget -N -P /opt/bin http://storage.googleapis.com/kubernetes/kubelet
-        ExecStart=/usr/bin/wget -N -P /opt/bin http://storage.googleapis.com/kubernetes/proxy
-        ExecStart=/usr/bin/chmod +x /opt/bin/kubelet
-        ExecStart=/usr/bin/chmod +x /opt/bin/proxy
-        RemainAfterExit=yes
-        Type=oneshot
 
     - name: kubelet.service
       command: start
       content: |
         [Unit]
         After=etcd.service
-        After=download-kubernetes.service
+        After=docker.service
         ConditionFileIsExecutable=/opt/bin/kubelet
         Description=Kubernetes Kubelet
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
         Wants=etcd.service
-        Wants=download-kubernetes.service
+        Wants=docker.service
 
         [Service]
         ExecStart=/opt/bin/kubelet \
@@ -90,7 +73,7 @@ coreos:
         --etcd_servers=http://127.0.0.1:4001 \
         --logtostderr=true
         Restart=always
-        RestartSec=10
+        RestartSec=5
 
         [Install]
         WantedBy=multi-user.target
@@ -100,17 +83,17 @@ coreos:
       content: |
         [Unit]
         After=etcd.service
-        After=download-kubernetes.service
+        After=docker.service
         ConditionFileIsExecutable=/opt/bin/proxy
         Description=Kubernetes Proxy
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
         Wants=etcd.service
-        Wants=download-kubernetes.service
+        Wants=docker.service
 
         [Service]
         ExecStart=/opt/bin/proxy --etcd_servers=http://127.0.0.1:4001 --logtostderr=true
         Restart=always
-        RestartSec=10
+        RestartSec=5
 
         [Install]
         WantedBy=multi-user.target

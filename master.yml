@@ -20,6 +20,8 @@ coreos:
         [Service]
         ExecStartPre=-/usr/bin/etcdctl set /coreos.com/network/config '{"Network":"10.100.0.0/16"}'
         ExecStart=/opt/bin/rudder -iface=$public_ipv4
+        Restart=always
+        RestartSec=5
 
         [Install]
         WantedBy=multi-user.target
@@ -38,44 +40,23 @@ coreos:
         ExecStartPre=-/usr/bin/ip link set dev docker0 down
         ExecStartPre=-/usr/sbin/brctl delbr docker0
         ExecStart=/usr/bin/docker -d -s=btrfs -H fd:// --bip=${RUDDER_SUBNET} --mtu=${RUDDER_MTU}
-        Restart=on-failure
+        Restart=always
         RestartSec=5
 
         [Install]
         WantedBy=multi-user.target
-
-    - name: download-kubernetes.service
-      command: start
-      content: |
-        [Unit]
-        After=network-online.target
-        Before=apiserver.service
-        Before=controller-manager.service
-        Description=Download Kubernetes Binaries
-        Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=network-online.target
-
-        [Service]
-        ExecStart=/usr/bin/wget -N -P /opt/bin http://storage.googleapis.com/kubernetes/apiserver
-        ExecStart=/usr/bin/wget -N -P /opt/bin http://storage.googleapis.com/kubernetes/controller-manager
-        ExecStart=/usr/bin/wget -N -P /opt/bin http://storage.googleapis.com/kubernetes/kubecfg
-        ExecStart=/usr/bin/chmod +x /opt/bin/apiserver
-        ExecStart=/usr/bin/chmod +x /opt/bin/controller-manager
-        ExecStart=/usr/bin/chmod +x /opt/bin/kubecfg
-        RemainAfterExit=yes
-        Type=oneshot
 
     - name: apiserver.service
       command: start
       content: |
         [Unit]
         After=etcd.service
-        After=download-kubernetes.service
+        After=docker.service
         ConditionFileIsExecutable=/opt/bin/apiserver
         Description=Kubernetes API Server
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
         Wants=etcd.service
-        Wants=download-kubernetes.service
+        Wants=docker.service
 
         [Service]
         ExecStart=/opt/bin/apiserver \
@@ -85,7 +66,7 @@ coreos:
         --machines=%MINION_IP_ADDRS% \
         --logtostderr=true
         Restart=always
-        RestartSec=10
+        RestartSec=5
 
         [Install]
         WantedBy=multi-user.target
@@ -95,19 +76,19 @@ coreos:
       content: |
         [Unit]
         After=etcd.service
-        After=download-kubernetes.service
+        After=docker.service
         ConditionFileIsExecutable=/opt/bin/controller-manager
         Description=Kubernetes Controller Manager
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
         Wants=etcd.service
-        Wants=download-kubernetes.service
+        Wants=docker.service
 
         [Service]
         ExecStart=/opt/bin/controller-manager \
         --master=127.0.0.1:8080 \
         --logtostderr=true
         Restart=always
-        RestartSec=10
+        RestartSec=5
 
         [Install]
         WantedBy=multi-user.target
