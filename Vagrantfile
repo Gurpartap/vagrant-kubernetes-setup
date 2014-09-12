@@ -72,7 +72,7 @@ Vagrant.configure("2") do |config|
     end
 
     # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
-    #config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
+    # config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
 
     m.vm.provision :shell, :inline => ETCD_DISCOVERY_CMD, :privileged => true
     m.vm.provision :shell, :inline => MOVE_USER_DATA_CMD, :privileged => true
