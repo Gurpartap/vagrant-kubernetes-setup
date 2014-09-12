@@ -89,3 +89,23 @@ coreos:
 
         [Install]
         WantedBy=multi-user.target
+
+    - name: scheduler.service
+      command: start
+      content: |
+        [Unit]
+        After=etcd.service
+        After=docker.service
+        ConditionFileIsExecutable=/opt/bin/scheduler
+        Description=Kubernetes Scheduler
+        Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+        Wants=etcd.service
+        Wants=docker.service
+
+        [Service]
+        ExecStart=/opt/bin/scheduler -master=127.0.0.1:8080
+        Restart=always
+        RestartSec=5
+
+        [Install]
+        WantedBy=multi-user.target
