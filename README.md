@@ -7,3 +7,4 @@ Vagrant configuration for setting up a Kubernetes setup on a cluster of CoreOS V
 1. Compile kubernetes and rudder.
 2. Add the compiled binaries to `./bin`.
 3. `$ ./up.sh`
+4. Use `kubecfg` to interact with Kubernetes on master.

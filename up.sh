@@ -10,7 +10,6 @@ vagrant up
 
 echo " ---> Step 2: Setup ssh tunnel into master"
 vagrant ssh-config master > ssh.config
-ssh -f -nNT -L 8080:127.0.0.1:8080 -F ssh.config master                         ✹
+ssh -f -nNT -L 8080:127.0.0.1:8080 -F ssh.config master
 
-echo " --> Step 3: Confirm kubecfg tunnel"
-kubecfg list minions
+echo " --> Done. Use `kubecfg` on host to interact with Kubernetes on master."
