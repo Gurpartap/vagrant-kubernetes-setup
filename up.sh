@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set +e
+
 echo " ---> Step 0: Flush everything"
 vagrant destroy -f
 
