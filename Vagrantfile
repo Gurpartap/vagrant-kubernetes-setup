@@ -92,7 +92,7 @@ Vagrant.configure("2") do |config|
     master.vm.provision :file, :source => MASTER_CONFIG_PATH, :destination => "/tmp/vagrantfile-user-data"
     master.vm.provision :shell, :inline => "sed -e \"s/%MINION_IP_ADDRS%/#{MINION_IP_ADDRS.join(',')}/g\" -i /tmp/vagrantfile-user-data", :privileged => true
 
-    provision.call(master, %w[rudder kubecfg controller-manager apiserver scheduler], "master")
+    provision.call(master, %w[flannel kubecfg controller-manager apiserver scheduler], "master")
   end
 
   (1..NUMBER_OF_MINIONS).each do |i|
@@ -102,7 +102,7 @@ Vagrant.configure("2") do |config|
 
       minion.vm.provision :file, :source => MINION_CONFIG_PATH, :destination => "/tmp/vagrantfile-user-data"
 
-      provision.call(minion, %w[rudder kubelet proxy scheduler], "minion-#{i}")
+      provision.call(minion, %w[flannel kubelet proxy scheduler], "minion-#{i}")
     end
   end
 end

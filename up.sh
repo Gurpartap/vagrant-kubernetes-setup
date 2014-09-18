@@ -12,4 +12,4 @@ echo " ---> Step 2: Setup ssh tunnel into master"
 vagrant ssh-config master > ssh.config
 ssh -f -nNT -L 8080:127.0.0.1:8080 -F ssh.config master
 
-echo " --> Done. Use `kubecfg` on host to interact with Kubernetes on master."
+echo " --> Done. Use kubecfg on your host machine to interact with Kubernetes on master."
