@@ -7,7 +7,7 @@ Vagrant configuration for setting up a [Kubernetes](https://github.com/GoogleClo
 1. Build Kubernetes and Flannel. See instructions below.
 2. Add the compiled binaries to this repo's `bin` directory.
 3. Run `bash up.sh` to provision vagrant and setup ssh tunnel for `kubecfg`.
-4. Use `kubecfg` to interact with Kubernetes API Server which is running on cluster's master.
+4. Use `kubecfg` to interact with Kubernetes API Server which is running on cluster's master. If you don't want to setup `kubecfg` on your machine, proceed with `vagrant ssh master`.
 
 #### Building Kubernetes and Flannel
 

@@ -50,6 +50,7 @@ ssh -f -nNT -L 8080:127.0.0.1:8080 -F ssh.config master
 cecho " ---> Done."
 echo ""
 echo "      Use kubecfg on your host machine to interact with Kubernetes API Server running on master."
+echo "      If you don't want to setup kubecfg on your host machine, proceed with \`vagrant ssh master\`."
 echo ""
 echo "      Try: \`kubecfg list minions\`"
 echo ""
