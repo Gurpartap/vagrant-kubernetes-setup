@@ -50,7 +50,7 @@ Vagrant.configure("2") do |config|
     discovery.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
   end
 
-  provision = ->(m, files, vm_name) {
+  provision = ->(node, binaries, vm_name) {
     if ENABLE_SERIAL_LOGGING
       logdir = File.join(File.dirname(__FILE__), "log")
       FileUtils.mkdir_p(logdir)
@@ -74,13 +74,13 @@ Vagrant.configure("2") do |config|
     # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
     # config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
 
-    m.vm.provision :shell, :inline => ETCD_DISCOVERY_CMD, :privileged => true
-    m.vm.provision :shell, :inline => MOVE_USER_DATA_CMD, :privileged => true
-    m.vm.provision :shell, :inline => "mkdir -p /opt/bin",  :privileged => true
-    files.each do |file|
+    node.vm.provision :shell, :inline => ETCD_DISCOVERY_CMD, :privileged => true
+    node.vm.provision :shell, :inline => MOVE_USER_DATA_CMD, :privileged => true
+    node.vm.provision :shell, :inline => "mkdir -p /opt/bin",  :privileged => true
+    binaries.each do |file|
       next unless File.exist?("#{BIN_PATH}/#{file}")
-      m.vm.provision :file, :source => "#{BIN_PATH}/#{file}", :destination => "/tmp/#{file}"
-      m.vm.provision :shell, :inline => "mv /tmp/#{file} /opt/bin/#{file} && /usr/bin/chmod +x /opt/bin/#{file}",  :privileged => true
+      node.vm.provision :file, :source => "#{BIN_PATH}/#{file}", :destination => "/tmp/#{file}"
+      node.vm.provision :shell, :inline => "mv /tmp/#{file} /opt/bin/#{file} && /usr/bin/chmod +x /opt/bin/#{file}",  :privileged => true
     end
   }
 
