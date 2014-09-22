@@ -9,4 +9,7 @@ Vagrant configuration for setting up a Kubernetes setup on a cluster of CoreOS V
 3. Run `bash up.sh` to provision vagrant and setup ssh tunnel for `kubecfg`.
 4. Use `kubecfg` to interact with Kubernetes API Server which is running on cluster's master.
 
-[1] Hint: Use `make` to build Kubernetes (look for binaries in `_output` directory).Use `./build` for Flannel and find the `flanneld` binary in your `$GOBIN` path.
+###### [1] Hint
+
+- Use `make` to build Kubernetes (look for binaries in `_output` directory).
+- Use `./build` for Flannel and find the `flanneld` binary in your `$GOBIN` path.
