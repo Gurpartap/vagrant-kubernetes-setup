@@ -23,7 +23,7 @@ coreos:
         Environment=FLEET_PUBLIC_IP=$public_ipv4
         ExecStart=/usr/bin/fleet
 
-    - name: flannel.service
+    - name: flanneld.service
       command: start
       content: |
         [Unit]
@@ -31,7 +31,7 @@ coreos:
         After=etcd.service
 
         [Service]
-        ExecStart=/opt/bin/flannel -iface=$public_ipv4
+        ExecStart=/opt/bin/flanneld -iface=$public_ipv4
         Restart=always
         RestartSec=5
 
@@ -41,11 +41,11 @@ coreos:
         [Unit]
         Description=Docker Application Container Engine
         Documentation=http://docs.docker.io
-        Requires=flannel.service
-        After=flannel.service
+        Requires=flanneld.service
+        After=flanneld.service
 
         [Service]
-        EnvironmentFile=/run/flannel/subnet.env
+        EnvironmentFile=/run/flanneld/subnet.env
         ExecStartPre=-/usr/bin/ip link set dev docker0 down
         ExecStartPre=-/usr/sbin/brctl delbr docker0
         ExecStart=/usr/bin/docker -d -s=btrfs -H fd:// --bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU}
