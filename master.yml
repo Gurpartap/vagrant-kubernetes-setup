@@ -22,7 +22,7 @@ coreos:
 
         [Service]
         ExecStartPre=-/usr/bin/etcdctl set /coreos.com/network/config '{"Network":"10.100.0.0/16"}'
-        ExecStart=/opt/bin/flannel -iface=$public_ipv4
+        ExecStart=/opt/bin/flanneld -iface=$public_ipv4
         Restart=always
         RestartSec=5
 
