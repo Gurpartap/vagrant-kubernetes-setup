@@ -2,6 +2,7 @@
 
 coreos:
   update:
+    group: alpha
     reboot-strategy: off
   etcd:
     addr: $public_ipv4:4001
