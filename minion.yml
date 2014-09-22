@@ -2,6 +2,7 @@
 
 coreos:
   update:
+    group: alpha
     reboot-strategy: off
   etcd:
     discovery: http://%ETCD_DISCOVERY%:4001/v2/keys/cluster
@@ -35,6 +36,9 @@ coreos:
         Restart=always
         RestartSec=5
 
+        [Install]
+        WantedBy=multi-user.target
+
     - name: docker.service
       command: restart
       content: |
@@ -45,7 +49,7 @@ coreos:
         After=flanneld.service
 
         [Service]
-        EnvironmentFile=/run/flanneld/subnet.env
+        EnvironmentFile=/run/flannel/subnet.env
         ExecStartPre=-/usr/bin/ip link set dev docker0 down
         ExecStartPre=-/usr/sbin/brctl delbr docker0
         ExecStart=/usr/bin/docker -d -s=btrfs -H fd:// --bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU}
@@ -59,11 +63,10 @@ coreos:
       command: start
       content: |
         [Unit]
-        After=etcd.service
-        After=docker.service
-        ConditionFileIsExecutable=/opt/bin/kubelet
         Description=Kubernetes Kubelet
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+        After=etcd.service
+        After=docker.service
         Wants=etcd.service
         Wants=docker.service
 
@@ -83,11 +86,10 @@ coreos:
       command: start
       content: |
         [Unit]
-        After=etcd.service
-        After=docker.service
-        ConditionFileIsExecutable=/opt/bin/proxy
         Description=Kubernetes Proxy
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+        After=etcd.service
+        After=docker.service
         Wants=etcd.service
         Wants=docker.service
 

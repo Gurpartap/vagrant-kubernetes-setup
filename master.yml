@@ -2,6 +2,7 @@
 
 coreos:
   update:
+    group: alpha
     reboot-strategy: off
   etcd:
     discovery: http://%ETCD_DISCOVERY%:4001/v2/keys/cluster
@@ -21,7 +22,7 @@ coreos:
 
         [Service]
         ExecStartPre=-/usr/bin/etcdctl set /coreos.com/network/config '{"Network":"10.100.0.0/16"}'
-        ExecStart=/opt/bin/flanneld -iface=$public_ipv4
+        ExecStart=/opt/bin/flannel -iface=$public_ipv4
         Restart=always
         RestartSec=5
 
@@ -38,7 +39,7 @@ coreos:
         After=flanneld.service
 
         [Service]
-        EnvironmentFile=/run/flanneld/subnet.env
+        EnvironmentFile=/run/flannel/subnet.env
         ExecStartPre=-/usr/bin/ip link set dev docker0 down
         ExecStartPre=-/usr/sbin/brctl delbr docker0
         ExecStart=/usr/bin/docker -d -s=btrfs -H fd:// --bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU}
@@ -52,11 +53,10 @@ coreos:
       command: start
       content: |
         [Unit]
-        After=etcd.service
-        After=docker.service
-        ConditionFileIsExecutable=/opt/bin/apiserver
         Description=Kubernetes API Server
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+        After=etcd.service
+        After=docker.service
         Wants=etcd.service
         Wants=docker.service
 
@@ -76,11 +76,10 @@ coreos:
       command: start
       content: |
         [Unit]
-        After=etcd.service
-        After=docker.service
-        ConditionFileIsExecutable=/opt/bin/controller-manager
         Description=Kubernetes Controller Manager
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+        After=etcd.service
+        After=docker.service
         Wants=etcd.service
         Wants=docker.service
 
@@ -96,11 +95,10 @@ coreos:
       command: start
       content: |
         [Unit]
-        After=etcd.service
-        After=docker.service
-        ConditionFileIsExecutable=/opt/bin/scheduler
         Description=Kubernetes Scheduler
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+        After=etcd.service
+        After=docker.service
         Wants=etcd.service
         Wants=docker.service
 
