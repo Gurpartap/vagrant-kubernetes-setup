@@ -102,7 +102,7 @@ Vagrant.configure("2") do |config|
 
       minion.vm.provision :file, :source => MINION_CONFIG_PATH, :destination => "/tmp/vagrantfile-user-data"
 
-      provision.call(minion, %w[flanneld kubelet proxy scheduler], "minion-#{i}")
+      provision.call(minion, %w[flanneld kubelet proxy], "minion-#{i}")
     end
   end
 end
