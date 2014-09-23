@@ -36,6 +36,7 @@ exit
 ```
 # for each of the binary; or tar them before hand.
 scp docker@192.168.59.103:/tmp/mybins/<filename> /path/to/vagrant-kubernetes-setup/bin/
+Password: tcuser
 ```
 
 ###### And if you don't
