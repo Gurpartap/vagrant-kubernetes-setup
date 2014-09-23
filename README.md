@@ -34,7 +34,8 @@ exit
 
 ###### If you use boot2docker
 ```
-scp docker@192.168.59.103:/tmp/mybins/* /path/to/vagrant-kubernetes-setup/bin/
+# for each of the binary; or tar them before hand.
+scp docker@192.168.59.103:/tmp/mybins/<filename> /path/to/vagrant-kubernetes-setup/bin/
 ```
 
 ###### And if you don't
