@@ -4,6 +4,8 @@ Vagrant configuration for setting up a [Kubernetes](https://github.com/GoogleClo
 
 #### Usage
 
+![](https://raw.githubusercontent.com/Gurpartap/vagrant-kubernetes-setup/master/demo.gif)
+
 1. Build Kubernetes and Flannel. See instructions below.
 2. Add the compiled binaries to this repo's `bin` directory.
 3. Run `bash up.sh` to provision vagrant and setup ssh tunnel for `kubecfg`.
