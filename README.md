@@ -4,7 +4,7 @@ Vagrant configuration for setting up a [Kubernetes](https://github.com/GoogleClo
 
 #### Usage
 
-![](https://raw.githubusercontent.com/Gurpartap/vagrant-kubernetes-setup/master/demo.gif)
+[![Click to view full version on asciinema.org](https://raw.githubusercontent.com/Gurpartap/vagrant-kubernetes-setup/master/demo.gif)](https://asciinema.org/a/12402)
 
 1. Build Kubernetes and Flannel. See instructions below.
 2. Add the compiled binaries to this repo's `bin` directory.
