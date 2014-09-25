@@ -43,12 +43,10 @@ Vagrant.configure("2") do |config|
     config.vbguest.auto_update = false
   end
 
-  config.vm.define "discovery" do |discovery|
-    discovery.vm.hostname = "discovery"
-    discovery.vm.network :private_network, ip: ETCD_DISCOVERY
-    discovery.vm.provision :file, source: DISCOVERY_CONFIG_PATH, destination: "/tmp/vagrantfile-user-data"
-    discovery.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
-  end
+  disable_update_engine = ->(node) {
+    # reboot-strategy doesn't allowing stopping coreos from downloading updates in the background.
+    node.vm.provision :shell, :inline => "systemctl stop update-engine.service && systemctl mask update-engine.service", :privileged => true
+  }
 
   provision = ->(node, binaries, vm_name) {
     if ENABLE_SERIAL_LOGGING
@@ -82,7 +80,18 @@ Vagrant.configure("2") do |config|
       node.vm.provision :file, :source => "#{BIN_PATH}/#{file}", :destination => "/tmp/#{file}"
       node.vm.provision :shell, :inline => "mv /tmp/#{file} /opt/bin/#{file} && /usr/bin/chmod +x /opt/bin/#{file}",  :privileged => true
     end
+
+    disable_update_engine.call(node)
   }
+
+  config.vm.define "discovery" do |discovery|
+    discovery.vm.hostname = "discovery"
+    discovery.vm.network :private_network, ip: ETCD_DISCOVERY
+    discovery.vm.provision :file, source: DISCOVERY_CONFIG_PATH, destination: "/tmp/vagrantfile-user-data"
+    discovery.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
+
+    disable_update_engine.call(discovery)
+  end
 
   config.vm.define "master" do |master|
     master.vm.hostname = "master"
