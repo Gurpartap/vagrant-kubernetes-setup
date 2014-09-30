@@ -5,7 +5,7 @@ coreos:
     group: alpha
     reboot-strategy: off
   etcd:
-    discovery: http://%ETCD_DISCOVERY%:4001/v2/keys/cluster
+    discovery: http://%discovery_ip_addr%:4001/v2/keys/cluster
     addr: $public_ipv4:4001
     peer-addr: $public_ipv4:7001
 
