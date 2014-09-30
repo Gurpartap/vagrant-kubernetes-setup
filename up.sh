@@ -38,7 +38,7 @@ do
 done
 
 cecho " ---> Step 2: Destroy existing cluster."
-vagrant destroy -f
+vagrant destroy -f || true
 
 cecho " ---> Step 3: Provision vagrant."
 vagrant up
