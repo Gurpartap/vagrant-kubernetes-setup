@@ -61,11 +61,6 @@ Vagrant.configure("2") do |config|
     config.vbguest.auto_update = false
   end
 
-  disable_update_engine = ->(node: node) {
-    # reboot-strategy doesn't allowing stopping coreos from downloading updates in the background.
-    node.vm.provision :shell, :inline => "systemctl stop update-engine.service && systemctl mask update-engine.service", :privileged => true
-  }
-
   setup = ->(node: node, vm_name: vm_name, ip_addr: ip_addr, binaries: binaries) {
     if enable_serial_logging
       logdir = File.join(File.dirname(__FILE__), "log")
@@ -107,7 +102,6 @@ Vagrant.configure("2") do |config|
     discovery.vm.network :private_network, ip: discovery_ip_addr
     discovery.vm.provision :file, source: discovery_config_path, destination: "/tmp/vagrantfile-user-data"
     discovery.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
-    disable_update_engine.call(node: discovery)
   end
 
   config.vm.define "master" do |master|
@@ -120,7 +114,6 @@ Vagrant.configure("2") do |config|
       ip_addr: master_ip_addr,
       binaries: %w[flanneld kubecfg controller-manager apiserver scheduler]
     )
-    disable_update_engine.call(node: master)
   end
 
   (1..$number_of_minions).each do |i|
@@ -132,7 +125,6 @@ Vagrant.configure("2") do |config|
         ip_addr: minion_ip_addrs[i-1],
         binaries: %w[flanneld kubelet proxy]
       )
-      disable_update_engine.call(node: minion)
     end
   end
 end

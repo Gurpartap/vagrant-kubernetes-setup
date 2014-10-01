@@ -9,5 +9,9 @@ coreos:
     peer-addr: $public_ipv4:7001
 
   units:
+    - name: update-engine.service
+      command: stop
+      mask: true
+
     - name: etcd.service
       command: start
