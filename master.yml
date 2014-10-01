@@ -4,6 +4,7 @@ coreos:
   update:
     group: alpha
     reboot-strategy: off
+
   etcd:
     discovery: http://%discovery_ip_addr%:4001/v2/keys/cluster
     addr: $public_ipv4:4001
@@ -26,38 +27,26 @@ coreos:
 
         [Service]
         ExecStartPre=-/usr/bin/etcdctl set /coreos.com/network/config '{"Network":"10.100.0.0/16"}'
-        ExecStart=/opt/bin/flanneld -iface=$public_ipv4
+        ExecStart=/opt/bin/flanneld -ip-masq=true -iface=$public_ipv4
         Restart=always
         RestartSec=5
 
         [Install]
         WantedBy=multi-user.target
 
-    - name: docker.service
-      command: restart
+    - name: use-flannel.service
+      command: start
       content: |
         [Unit]
-        Description=Docker Application Container Engine
-        Documentation=http://docs.docker.io
-        Requires=flanneld.service
+        ConditionPathExists=/etc/systemd/system/docker.service.d/10-flannel.conf.init
+        Description=Use Flannel for Docker networking
         After=flanneld.service
-        After=network.target
 
         [Service]
-        # Defaults
-        Environment="TMPDIR=/var/tmp/"
-        ExecStartPre=/bin/mount --make-rprivate /
-        LimitNOFILE=1048576
-        LimitNPROC=1048576
-        # Flannel
-        EnvironmentFile=/run/flannel/subnet.env
-        ExecStartPre=-/usr/bin/ip link set dev docker0 down
-        ExecStartPre=-/usr/sbin/brctl delbr docker0
-        # Run docker but don't have docker automatically restart
-        # containers. This is a job for systemd and unit files.
-        ExecStart=/usr/bin/docker --daemon --storage-driver=btrfs --host=fd:// --bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU}
-        Restart=always
-        RestartSec=5
+        Type=oneshot
+        ExecStart=/usr/bin/systemctl stop docker
+        ExecStart=/usr/bin/mv /etc/systemd/system/docker.service.d/10-flannel.conf.init /etc/systemd/system/docker.service.d/10-flannel.conf
+        ExecStart=/usr/bin/systemctl daemon-reload
 
         [Install]
         WantedBy=multi-user.target
@@ -122,3 +111,21 @@ coreos:
 
         [Install]
         WantedBy=multi-user.target
+
+write_files:
+  - path: /etc/systemd/system/docker.service.d/10-flannel.conf.init
+    permissions: 0644
+    owner: root
+    content: |
+      [Unit]
+      Requires=flanneld.service
+      After=flanneld.service
+
+      [Service]
+      EnvironmentFile=/run/flannel/subnet.env
+      ExecStartPre=/bin/bash -c "/usr/bin/ifconfig docker0 down || true"
+      ExecStartPre=/bin/bash -c "/usr/sbin/brctl delbr docker0 || true"
+      ExecStart=
+      ExecStart=/usr/bin/docker --daemon --storage-driver=btrfs --host=fd:// --bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU}
+      Restart=always
+      RestartSec=5

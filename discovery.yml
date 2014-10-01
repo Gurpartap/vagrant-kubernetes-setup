@@ -4,6 +4,7 @@ coreos:
   update:
     group: alpha
     reboot-strategy: off
+
   etcd:
     addr: $public_ipv4:4001
     peer-addr: $public_ipv4:7001
