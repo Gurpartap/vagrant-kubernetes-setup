@@ -103,6 +103,7 @@ Vagrant.configure("2") do |config|
   }
 
   config.vm.define "discovery" do |discovery|
+    discovery.vm.hostname = "discovery"
     discovery.vm.network :private_network, ip: discovery_ip_addr
     discovery.vm.provision :file, source: discovery_config_path, destination: "/tmp/vagrantfile-user-data"
     discovery.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
