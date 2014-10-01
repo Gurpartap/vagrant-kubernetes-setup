@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # # vi: set ft=ruby :
 
-require 'fileutils'
+require "fileutils"
 
 $number_of_minions = 3
 coreos_channel = "alpha"
@@ -19,9 +19,6 @@ master_config_path = File.join(File.dirname(__FILE__), "master.yml")
 minion_config_path = File.join(File.dirname(__FILE__), "minion.yml")
 bin_path = File.join(File.dirname(__FILE__), "bin")
 
-move_user_data_cmd = "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/"
-etcd_discovery_cmd = "sed -e \"s/%discovery_ip_addr%/#{discovery_ip_addr}/g\" -i /tmp/vagrantfile-user-data"
-
 Vagrant.require_version ">= 1.6.0"
 Vagrant.configure("2") do |config|
   config.vm.box = "coreos-#{coreos_channel}"
@@ -29,7 +26,7 @@ Vagrant.configure("2") do |config|
   config.vm.box_url = "http://#{coreos_channel}.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json"
 
   # Enable NFS for sharing the host machine into the coreos-vagrant VM.
-  # config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
+  # config.vm.synced_folder ".", "/home/core/share", id: "core", nfs: true, mount_options: ["nolock,vers=3,udp"]
 
   config.nfs.functional = false
 
@@ -61,7 +58,14 @@ Vagrant.configure("2") do |config|
     config.vbguest.auto_update = false
   end
 
-  setup = ->(node: node, vm_name: vm_name, ip_addr: ip_addr, binaries: binaries) {
+  configure_node = ->(options = {}) {
+    node        = options[:node]        || nil
+    vm_name     = options[:vm_name]     || nil
+    ip_addr     = options[:ip_addr]     || nil
+    config_path = options[:config_path] || nil
+    binaries    = options[:binaries]    || []
+    commands    = options[:commands]    || []
+
     if enable_serial_logging
       logdir = File.join(File.dirname(__FILE__), "log")
       FileUtils.mkdir_p(logdir)
@@ -82,47 +86,57 @@ Vagrant.configure("2") do |config|
       end
     end
 
-    node.vm.hostname = vm_name
-    node.vm.network :private_network, ip: ip_addr
+    node.vm.hostname = vm_name if vm_name != nil
+    node.vm.network :private_network, ip: ip_addr if ip_addr != nil
+    node.vm.provision :file, source: config_path, destination: "/tmp/vagrantfile-user-data" if config_path != nil
 
-    commands = [etcd_discovery_cmd, move_user_data_cmd, "mkdir -p /opt/bin"]
+    # Substitute the placeholders.
+    commands << "sed -e \"s/%discovery_ip_addr%/#{discovery_ip_addr}/g\" -i /tmp/vagrantfile-user-data" if vm_name != "discovery"
 
+    # Move the cloud-config file to its expected place.
+    commands << "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/"
+
+    # Copy the binaries.
+    commands << "mkdir -p /opt/bin" if binaries.size > 0
     binaries.each do |file|
       next unless File.exist?("#{bin_path}/#{file}")
-      node.vm.provision :file, :source => "#{bin_path}/#{file}", :destination => "/tmp/#{file}"
+      node.vm.provision :file, source: "#{bin_path}/#{file}", destination: "/tmp/#{file}"
       commands << "mv /tmp/#{file} /opt/bin/#{file}"
       commands << "/usr/bin/chmod +x /opt/bin/#{file}"
     end
 
-    node.vm.provision :shell, :inline => commands.join(' && '),  :privileged => true
+    # Run the commands.
+    node.vm.provision :shell, inline: commands.join(" && "), privileged: true
   }
 
   config.vm.define "discovery" do |discovery|
-    discovery.vm.hostname = "discovery"
-    discovery.vm.network :private_network, ip: discovery_ip_addr
-    discovery.vm.provision :file, source: discovery_config_path, destination: "/tmp/vagrantfile-user-data"
-    discovery.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
+    configure_node.call(
+      node: discovery,
+      vm_name: "discovery",
+      ip_addr: discovery_ip_addr,
+      config_path: discovery_config_path
+    )
   end
 
   config.vm.define "master" do |master|
     # master.vm.network :forwarded_port, guest: 4001, host: 4001
-    master.vm.provision :file, :source => master_config_path, :destination => "/tmp/vagrantfile-user-data"
-    master.vm.provision :shell, :inline => "sed -e \"s/%minion_ip_addrs%/#{minion_ip_addrs.join(',')}/g\" -i /tmp/vagrantfile-user-data", :privileged => true
-    setup.call(
+    configure_node.call(
       node: master,
       vm_name: "master",
       ip_addr: master_ip_addr,
-      binaries: %w[flanneld kubecfg controller-manager apiserver scheduler]
+      config_path: master_config_path,
+      binaries: %w[flanneld kubecfg controller-manager apiserver scheduler],
+      commands: ["sed -e \"s/%minion_ip_addrs%/#{minion_ip_addrs.join(',')}/g\" -i /tmp/vagrantfile-user-data"]
     )
   end
 
   (1..$number_of_minions).each do |i|
     config.vm.define "minion-#{i}" do |minion|
-      minion.vm.provision :file, :source => minion_config_path, :destination => "/tmp/vagrantfile-user-data"
-      setup.call(
+      configure_node.call(
         node: minion,
         vm_name: "minion-#{i}",
         ip_addr: minion_ip_addrs[i-1],
+        config_path: minion_config_path,
         binaries: %w[flanneld kubelet proxy]
       )
     end
