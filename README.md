@@ -31,7 +31,7 @@ bundle exec rake spec
 
 ```
 docker pull google/golang
-docker -ti --rm -v /tmp/mybins/:/tmp/mybins/ google/golang /bin/bash
+docker run -ti --rm -v /tmp/mybins/:/tmp/mybins/ google/golang /bin/bash
 ```
 
 ###### Inside the container
@@ -44,7 +44,8 @@ cp _output/go/bin/* /tmp/mybins/
 
 # Build Flannel
 go get github.com/coreos/flannel
-$GOPATH/src/github.com/coreos/flannel/build
+cd $GOPATH/src/github.com/coreos/flannel
+./build
 cp $GOPATH/bin/flanneld /tmp/mybins/
 
 exit
