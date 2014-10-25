@@ -2,3 +2,5 @@
 ssh.config
 bin/*
 *.tar.gz
+.bundle
+.rspec

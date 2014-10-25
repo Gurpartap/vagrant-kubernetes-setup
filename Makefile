@@ -10,5 +10,9 @@ vf vmware_fusion:
 p parallels:
 	vagrant up --provider parallels
 
+test:
+	bundle install --path .bundle
+	bundle exec rake spec
+
 clean:
 	vagrant destroy -f

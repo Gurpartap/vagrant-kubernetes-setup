@@ -11,6 +11,22 @@ Vagrant configuration for setting up a [Kubernetes](https://github.com/GoogleClo
 3. Run `bash up.sh` to provision vagrant and setup ssh tunnel for `kubecfg`.
 4. Use `kubecfg` to interact with Kubernetes API Server which is running on cluster's master. If you don't want to setup `kubecfg` on your machine, proceed with `vagrant ssh master`.
 
+#### Validate your cluster with serverspec
+
+> aka testing
+
+Install the `serverspec` gem:
+
+```bash
+bundle install --path .bundle
+```
+
+Run tests:
+
+```bash
+bundle exec rake spec
+```
+
 #### Building Kubernetes and Flannel
 
 ```
