@@ -1,5 +1,5 @@
 all:
-	vagrant up
+	./up.sh
 
 vb virtualbox:
 	vagrant up --provider virtualbox
