@@ -26,7 +26,7 @@ coreos:
         After=etcd.service
 
         [Service]
-        ExecStartPre=-/usr/bin/etcdctl set /coreos.com/network/config '{"Network":"10.100.0.0/16"}'
+        ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{"Network":"10.100.0.0/16"}'
         ExecStart=/opt/bin/flanneld -ip-masq=true -iface=$public_ipv4
         Restart=always
         RestartSec=5
